@@ -1,0 +1,68 @@
+# curvurture test from other
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+def enrich(x, y):
+    x2 = []
+    y2 = []
+    for i in range(len(x)-1):
+        x2 += [x[i], (x[i] + x[i+1]) / 2]  # using 보간법
+        y2 += [y[i], (y[i] + y[i + 1]) / 2]
+    x2 += [x[-1]]
+    y2 += [y[-1]]
+    assert len(x2) == len(y2)
+    return x2, y2
+
+data = np.loadtxt('FILENAME')  # filename
+x = data[:, 0]
+y = data[:, 1]
+
+for _ in range(0):
+    x, y = enrich(x, y)
+
+dx = np.gradient(x, x)  # first derivatives
+dy = np.gradient(y, x)
+
+d2x = np.gradient(dx, x)  # second derivatives
+d2y = np.gradient(dy, x)
+
+cur = np.abs(d2y) / (np.sqrt(1 + dy ** 2)) ** 1.5  # curvature
+# 아니라면 H/2 + W^2/8H (H: 호의 중간 부분과 선분(현)과의 길이, W: 선분(현)의 길이)
+
+# My interpolation with a lot of points made quickly
+a = 10
+b = 700
+N = 10
+x0 = 100
+y0 = 200
+
+x2 = np.linspace(a, b, num=N)  # 크기
+y2 = -0.0225*(x2 - x0)**2 + y0  # (x0, y0)를 기준으로 한 값
+
+dy2 = np.gradient(y2, x2)
+
+d2y2 = np.gradient(dy2, x2)
+
+cur2 = np.abs(d2y2) / (np.sqrt(1 + dy2 ** 2)) ** 1.5  # curvature
+
+plt.figure(1)
+
+plt.subplot(221)
+plt.plot(x, y, 'b', x2, y2, 'r')
+plt.legend(['new sorted values', 'My interpolation values'])
+plt.title('y=f(x)')
+plt.subplot(222)
+plt.plot(x, cur, 'b', x2, cur2, 'r')
+plt.legend(['new sorted values', 'My interpolation values'])
+plt.title('curvature')
+plt.subplot(223)
+plt.plot(x, dy, 'b', x2, dy2, 'r')
+plt.legend(['new sorted values', 'My interpolation values'])
+plt.title('dy/dx')
+plt.subplot(224)
+plt.plot(x, d2y, 'b', x2, d2y2, 'r')
+plt.legend(['new sorted values', 'My interpolation values'])
+plt.title('d2y/dx2')
+
+plt.show()
