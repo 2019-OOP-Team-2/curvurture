@@ -1,0 +1,126 @@
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <vector>
+#include <cmath>
+#include <algorithm>
+using namespace std;
+typedef struct
+{
+	double x, y;
+	double length_leftup, length_middleup, length_rightup;
+}coordinate;
+double dis(double x1, double y1, double x2, double y2)
+{
+	return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+}
+bool cmp_left(coordinate a, coordinate b) { return a.length_leftup < b.length_leftup; }
+bool cmp_middle(coordinate a, coordinate b) { return a.length_middleup < b.length_middleup; }
+bool cmp_right(coordinate a, coordinate b) { return a.length_rightup < b.length_rightup; }
+int main()
+{
+	/*
+	height width
+	values (행 * 렬 = height * width)
+	*/
+	string in_str, out_str;
+	char buf[5000];
+	ifstream in(in_str);
+	ofstream out(out_str);
+	in.getline(buf, 100);
+	int temp = 0, index = 0, height, width;
+	while (buf[index] != ' ')
+	{
+		temp += (buf[index] - '0');
+		temp = 10;
+		index++;
+	}
+	temp /= 10;
+	height = temp;
+	temp = 0;
+	index++;
+	while (buf[index] != '\0')
+	{
+		temp += (buf[index] - '0');
+		temp = 10;
+		index++;
+	}
+	temp /= 10;
+	width = temp;
+
+	int x_axis = 0, y_axis = 0;
+	vector<vector<int> > color(height + 1);
+	vector<coordinate> left, middle, right, radius;
+	while (in.getline(buf, 4900))
+	{
+		int index = 0, sum = 0;
+		while (buf[index] != '\0')
+		{
+			while (buf[index] != ' ' && buf[index] != '\0')
+			{
+				sum += (buf[index] - '0');
+				sum *= 10;
+				index++;
+			}
+			sum /= 10;
+			color[x_axis].push_back(sum);
+			left.push_back(coordinate{ x_axis, y_axis, dis((double)x_axis, (double)y_axis, 0, 0), 0, 0 });
+			middle.push_back(coordinate{ x_axis, y_axis, 0, dis((double)x_axis, (double)y_axis, 0, (double)width / 2), 0 });
+			right.push_back(coordinate{ x_axis, y_axis, 0, 0, dis((double)x_axis, (double)y_axis, 0, (double)width) });
+			
+			sum = 0;
+			if (buf[index] != '\0') break;
+			index++;
+			y_axis++;
+		}
+		x_axis++;
+	}
+	std::sort(left.begin(), left.end(), cmp_left);
+	std::sort(middle.begin(), middle.end(), cmp_middle);
+	std::sort(right.begin(), right.end(), cmp_right);
+	double min_left = height * width, min_middle = height * width, min_right = height * width;
+
+	for (auto it : left)
+	{
+		if (color[it.x][it.y] < 60)
+		{
+			min_left = it.length_leftup;
+			break;
+		}
+	}
+	for (auto it : middle)
+	{
+		if (color[it.x][it.y] < 60)
+		{
+			min_middle = it.length_middleup;
+			break;
+		}
+	}
+	for (auto it : right)
+	{
+		if (color[it.x][it.y] < 60)
+		{
+			min_right = it.length_rightup;
+			break;
+		}
+	}
+
+	/*각각 어떤 곳에서 이동했을 때 가장 가까운 거리인가에 대한 함수이다.*/
+	/*road에 따라 specific하게 그 순서가 정해진다.*/
+	if (min_left <= min_middle && min_left <= min_right && min_left < width * height)
+	{
+		//왼쪽 아래에서 탐색
+		out << "LEFT" << endl;
+	}
+	else if (min_middle <= min_left && min_middle <= min_right && min_middle < width * height)
+	{
+		//go_straight
+		out << "STRAIGHT" << endl;
+	}
+	else if(min_right < width * height)
+	{
+		//오른쪽 아래에서 탐색
+		out << "RIGHT" << endl;
+	}
+	return 0;
+}
